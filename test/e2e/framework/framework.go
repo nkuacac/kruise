@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/onsi/ginkgo/v2"
 	kruiseclientset "github.com/openkruise/kruise/pkg/client/clientset/versioned"
 	v1 "k8s.io/api/core/v1"
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -37,7 +38,6 @@ import (
 	scaleclient "k8s.io/client-go/scale"
 	"k8s.io/kubernetes/pkg/api/legacyscheme"
 
-	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 )
 
@@ -127,7 +127,7 @@ func NewFramework(baseName string, options Options, client clientset.Interface) 
 // BeforeEach gets a client and makes a namespace.
 func (f *Framework) BeforeEach() {
 	// The fact that we need this feels like a bug in ginkgo.
-	// https://github.com/onsi/ginkgo/issues/222
+	// https://github.com/onsi/ginkgo/v2/issues/222
 	f.cleanupHandle = AddCleanupAction(f.AfterEach)
 	if f.ClientSet == nil {
 		ginkgo.By("Creating a kubernetes client")
@@ -314,7 +314,7 @@ func KruiseDescribe(text string, body func()) bool {
 	return ginkgo.Describe("[kruise.io] "+text, body)
 }
 
-// ConformanceIt is a wrapper function for ginkgo It.  Adds "[Conformance]" tag and makes static analysis easier.
-func ConformanceIt(text string, body interface{}, timeout ...float64) bool {
-	return ginkgo.It(text+" [Conformance]", body, timeout...)
+// ConformanceIt is wrapper function for ginkgo It.  Adds "[Conformance]" tag and makes static analysis easier.
+func ConformanceIt(text string, body interface{}) bool {
+	return ginkgo.It(text+" [Conformance]", ginkgo.Offset(1), body)
 }

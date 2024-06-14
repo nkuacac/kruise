@@ -2,8 +2,8 @@ package apps
 
 import (
 	"fmt"
+	"github.com/onsi/ginkgo/v2"
 
-	"github.com/onsi/ginkgo"
 	kruiseclientset "github.com/openkruise/kruise/pkg/client/clientset/versioned"
 	"github.com/openkruise/kruise/test/e2e/framework"
 	"k8s.io/apimachinery/pkg/util/intstr"

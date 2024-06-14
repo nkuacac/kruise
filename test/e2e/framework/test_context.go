@@ -25,7 +25,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/onsi/ginkgo/config"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
@@ -147,6 +146,12 @@ type TestContextType struct {
 
 	// The DNS Domain of the cluster.
 	ClusterDNSDomain string
+
+	// ProgressReportURL is the URL which progress updates will be posted to as tests complete. If empty, no updates are sent.
+	ProgressReportURL string
+
+	// SpecSummaryOutput is the file to write ginkgo.SpecSummary objects to as tests complete. Useful for debugging and test introspection.
+	SpecSummaryOutput string
 }
 
 // NodeTestContextType is part of TestContextType, it is shared by all node e2e test.
@@ -196,14 +201,14 @@ var TestContext TestContextType
 
 // RegisterCommonFlags registers flags common to all e2e test suites.
 func RegisterCommonFlags(flags *flag.FlagSet) {
-	// Turn on verbose by default to get spec names
-	config.DefaultReporterConfig.Verbose = true
-
-	// Turn on EmitSpecProgress to get spec progress (especially on interrupt)
-	config.GinkgoConfig.EmitSpecProgress = true
-
-	// Randomize specs as well as suites
-	config.GinkgoConfig.RandomizeAllSpecs = true
+	//// Turn on verbose by default to get spec names
+	//config.DefaultReporterConfig.Verbose = true
+	//
+	//// Turn on EmitSpecProgress to get spec progress (especially on interrupt)
+	//config.GinkgoConfig.EmitSpecProgress = true
+	//
+	//// Randomize specs as well as suites
+	//config.GinkgoConfig.RandomizeAllSpecs = true
 
 	flags.StringVar(&TestContext.GatherKubeSystemResourceUsageData, "gather-resource-usage", "false", "If set to 'true' or 'all' framework will be monitoring resource usage of system all add-ons in (some) e2e tests, if set to 'master' framework will be monitoring master node only, if set to 'none' of 'false' monitoring will be turned off.")
 	flags.BoolVar(&TestContext.GatherLogsSizes, "gather-logs-sizes", false, "If set to true framework will be monitoring logs sizes on all machines running e2e tests.")
@@ -212,6 +217,9 @@ func RegisterCommonFlags(flags *flag.FlagSet) {
 	flags.BoolVar(&TestContext.AllowGatheringProfiles, "allow-gathering-profiles", true, "If set to true framework will allow to gather CPU/memory allocation pprof profiles from the master.")
 	flags.BoolVar(&TestContext.IncludeClusterAutoscalerMetrics, "include-cluster-autoscaler", false, "If set to true, framework will include Cluster Autoscaler when gathering metrics.")
 	flags.StringVar(&TestContext.OutputPrintType, "output-print-type", "json", "Format in which summaries should be printed: 'hr' for human readable, 'json' for JSON ones.")
+	flags.StringVar(&TestContext.ProgressReportURL, "progress-report-url", "", "The URL to POST progress updates to as the suite runs to assist in aiding integrations. If empty, no messages sent.")
+	flags.StringVar(&TestContext.SpecSummaryOutput, "spec-dump", "", "The file to dump all ginkgo.SpecSummary to after tests run. If empty, no objects are saved/printed.")
+
 	flags.BoolVar(&TestContext.DumpLogsOnFailure, "dump-logs-on-failure", false, "If set to true test will dump data about the namespace in which test was running.")
 	flags.BoolVar(&TestContext.DisableLogDump, "disable-log-dump", false, "If set to true, logs from master and nodes won't be gathered after test run.")
 	flags.StringVar(&TestContext.LogexporterGCSPath, "logexporter-gcs-path", "", "Path to the GCS artifacts directory to dump logs from nodes. Logexporter gets enabled if this is non-empty.")

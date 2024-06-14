@@ -19,18 +19,20 @@ package e2e
 
 import (
 	"flag"
+	"fmt"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/onsi/ginkgo/v2"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-
 	// Never, ever remove the line with "/ginkgo". Without it,
 	// the ginkgo test runner will not detect that this
 	// directory contains a Ginkgo test suite.
 	// See https://github.com/kubernetes/kubernetes/issues/74827
-	// "github.com/onsi/ginkgo"
+	// "github.com/onsi/ginkgo/v2"
 
 	kruiseapis "github.com/openkruise/kruise/apis"
 	"github.com/openkruise/kruise/test/e2e/framework"
@@ -80,3 +82,51 @@ func TestE2E(t *testing.T) {
 	klog.Infof("Args: %v", os.Args)
 	RunE2ETests(t)
 }
+
+var _ = ginkgo.ReportAfterEach(func(report ginkgo.SpecReport) {
+	progressReporter.ProcessSpecReport(report)
+})
+
+var _ = ginkgo.ReportBeforeSuite(func(report ginkgo.Report) {
+	progressReporter.SetTestsTotal(report.PreRunStats.SpecsThatWillRun)
+})
+
+var _ = ginkgo.ReportAfterSuite("Kubernetes e2e suite report", func(report ginkgo.Report) {
+	var err error
+	// The DetailsRepoerter will output details about every test (name, files, lines, etc) which helps
+	// when documenting our tests.
+	if len(framework.TestContext.SpecSummaryOutput) <= 0 {
+		return
+	}
+	absPath, err := filepath.Abs(framework.TestContext.SpecSummaryOutput)
+	if err != nil {
+		klog.Errorf("%#v\n", err)
+		panic(err)
+	}
+	f, err := os.Create(absPath)
+	if err != nil {
+		klog.Errorf("%#v\n", err)
+		panic(err)
+	}
+
+	defer f.Close()
+
+	for _, specReport := range report.SpecReports {
+		b, err := specReport.MarshalJSON()
+		if err != nil {
+			klog.Errorf("Error in detail reporter: %v", err)
+			return
+		}
+		_, err = f.Write(b)
+		if err != nil {
+			klog.Errorf("Error saving test details in detail reporter: %v", err)
+			return
+		}
+		// Printing newline between records for easier viewing in various tools.
+		_, err = fmt.Fprintln(f, "")
+		if err != nil {
+			klog.Errorf("Error saving test details in detail reporter: %v", err)
+			return
+		}
+	}
+})
